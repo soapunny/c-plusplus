@@ -1,0 +1,14 @@
+#게임룰 변경사항
+(Game rule update)
+
+You will play this game in a pitcher's point of view.
+you need to guess hitter's numbers.
+1) 투수 시점에서 플레이하는 게임이라 아웃을 먼저 잡으면 승리인데, 모든 숫자가 맞지 않을 시 out이 되던 원래 룰이 너무 이상하다고 판단되어 해당 룰 삭제( I erased the original rule that gives 'out' when you didn't guess any digit.)
+
+2) 9회 예측 실패시 볼넷(Base on balls) 허용
+(if you fail to guess a number 9 times in a row, your enemy will get Base on balls)
+
+3) 해당 횟수 안에 예측 성공 시 strike out -> 1 out
+(if you succeed to guess a number in 9 times, you will make a strike out)
+
+4) 3out 시 공수 교대, Computer 피칭 시 내가 숫자를 제시한다.
