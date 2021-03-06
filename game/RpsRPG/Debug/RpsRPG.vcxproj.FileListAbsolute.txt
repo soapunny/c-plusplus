@@ -1,0 +1,2 @@
+E:\C++\game\RpsRPG\Debug\RpsRPG.exe
+E:\C++\game\RpsRPG\Debug\RpsRPG.pdb
