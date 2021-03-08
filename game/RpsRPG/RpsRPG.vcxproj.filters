@@ -15,7 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RpsRPG.cpp">
+    <ClCompile Include="RpsRPG_v1.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RpsRPG_v2.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
