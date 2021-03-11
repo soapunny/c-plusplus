@@ -141,6 +141,8 @@
   <ItemGroup>
     <ClCompile Include="RpsRPG_v1.cpp" />
     <ClCompile Include="RpsRPG_v2.cpp" />
+    <ClCompile Include="RpsRPG_v3.cpp" />
+    <ClCompile Include="RpsRPG_v3_refactored.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
