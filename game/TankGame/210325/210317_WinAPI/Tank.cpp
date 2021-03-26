@@ -1,19 +1,21 @@
 #include "Tank.h"
 #include "RGBColor.h"
-#include "Bullet.h"
+#include "Dynamite.h"
 #include <ctime>
 
 int Tank::NAME_NUM;
 
-
 HRESULT Tank::Init()
 {
+	srand(time(NULL));
 	width = 100;
 	height = 100;
+	killCnt = 0;
 	if(name.size() < 1)
 		name = "ÅÊÅ©"+to_string(++NAME_NUM);
-	pos.x = 100;
-	pos.y = WND_HEIGHT*2/3;
+	MOVE_PATTERN = rand()%4;
+	pos.x = rand()%WND_WIDTH;
+	pos.y = WND_HEIGHT/4;
 	shape.left = pos.x - width/2;
 	shape.top = pos.y - height/2;
 	shape.right = pos.x + width / 2;
@@ -21,9 +23,10 @@ HRESULT Tank::Init()
 	maxHp = 5;
 	currentHp = 5;
 	isAlive = true;
-	speed = 10;
+	speed = 20;
 	maxBullet = 5;
 	direction = MOVE::MOVE_DOWN;
+	bulletType = BULLET::DEFAULT_BULLET;
 	color = new RGBColor();
 	color->ShuffleColor();
 
@@ -163,24 +166,43 @@ void Tank::Fire()
 	if (bullets.size() >= maxBullet) {
 		return;
 	}
-	Bullet* bullet = new Bullet();
-	(*bullet).Init();
+	else if (bullets.size() > 0) {
+		for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end();iter++) {
+			if ((*iter)->GetBulletType() == BULLET::DYNAMITE_BULLET)
+				return;
+		}
+	}
+	Bullet* bullet = nullptr;
+	if (bulletType == BULLET::DEFAULT_BULLET)
+		bullet = new Bullet();
+	else if(bulletType == BULLET::DYNAMITE_BULLET)
+		bullet = new Dynamite();
+ 	(*bullet).Init();
 	(*bullet).SetFlyingAngle(barrelAngle);
-	(*bullet).SetPos({ (LONG)(pos.x + cosf(barrelAngle) * (barrelSize+10)) , (LONG)(pos.y - sinf(barrelAngle) * barrelSize) });
+	(*bullet).SetPos({(pos.x + cosf(barrelAngle) * (barrelSize+10)) , (pos.y - sinf(barrelAngle) * barrelSize) });
 	bullets.push_back(bullet);
 }
 
 void Tank::FlyBullet()
 {
 	for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end();iter++) {
-		(*iter)->Move();
+		(**iter).Move();
 	}
 }
 
 void Tank::RemoveBullet(Tank* tank)
 {
 	for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end();) {
-		if ((*iter)->GetPos().x < 0 || (*iter)->GetPos().x > WND_WIDTH || (*iter)->GetPos().y < 0 || (*iter)->GetPos().y > WND_HEIGHT) {
+		if ((*iter)->GetBulletType() == BULLET::DYNAMITE_BULLET) {
+			((Dynamite*)(*iter))->RemoveBullet(tank);
+			if (((Dynamite*)(*iter))->HasNoBullet()) {
+				((Dynamite*)(*iter))->Release();
+				iter = bullets.erase(iter);
+			}else{
+				iter++;
+			}
+		}
+		else if((*iter)->GetPos().x < 0 || (*iter)->GetPos().x > WND_WIDTH || (*iter)->GetPos().y < 0 || (*iter)->GetPos().y > WND_HEIGHT) {
 			(*iter)->Release();
 			delete (*iter);
 			iter = bullets.erase(iter);
@@ -188,6 +210,8 @@ void Tank::RemoveBullet(Tank* tank)
 		else if (tank->GetAlive() && (*iter)->GetPos().x >= tank->GetPos().x - tank->GetWidth() / 2 && (*iter)->GetPos().x <= tank->GetPos().x + tank->GetWidth() / 2
 			&& (*iter)->GetPos().y <= tank->GetPos().y + tank->GetHeight() / 2 && (*iter)->GetPos().y >= tank->GetPos().y - tank->GetHeight() / 2){
 			tank->HitByBullet((*iter)->GetDamage());
+			if (!tank->GetAlive())
+				killCnt++;
 			(*iter)->Release();
 			delete (*iter);
 			iter = bullets.erase(iter);
@@ -227,36 +251,36 @@ void Tank::Move(MOVE move)
 	shape.bottom = pos.y + height / 2;
 }
 
-void Tank::MoveRandom()
+void Tank::Move()
 {
 	srand(time(NULL));
-	int randNum = (rand() % 4);
-	switch (randNum) {
+	MOVE_PATTERN = rand()%4;
+	switch (MOVE_PATTERN) {
 	case 0:
-		pos.x += speed * 2;
+		pos.x += speed;
 		if (pos.x >= WND_WIDTH) {
-			pos.x -= speed * 2;
-			randNum = 1;
+			pos.x -= speed;
+			MOVE_PATTERN = rand() % 4;
 		}
 		break;
 	case 1:
-		pos.x -= speed * 2;
+		pos.x -= speed;
 		if (pos.x <= 0) {
-			pos.x += speed * 2;
-			randNum = 2;
+			pos.x += speed;
+			MOVE_PATTERN = rand() % 4;
 		}
 		break;
 	case 2:
-		pos.y += speed * 2;
+		pos.y += speed;
 		if (pos.y >= WND_HEIGHT) {
-			pos.y -= speed * 2;
-			randNum = 3;
+			pos.y -= speed;
+			MOVE_PATTERN = rand() % 4;
 		}
 		break;
 	case 3:
-		pos.y -= speed * 2;
+		pos.y -= speed;
 		if (pos.y <= 0) {
-			pos.y += speed * 2;
+			pos.y += speed;
 		}
 		break;
 	}
@@ -268,10 +292,15 @@ void Tank::MoveRandom()
 
 void Tank::Die()
 {
+	for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end();) {
+		(*iter)->Release();
+		delete (*iter);
+		iter = bullets.erase(iter);
+	}
 	isAlive = false;
 }
 
-void Tank::MoveBarrelTo(POINT pos)
+void Tank::MoveBarrelTo(FPOINT pos)
 {
 	float width = float(pos.x) - this->pos.x;
 	if (width < 0) width = -width;
@@ -289,7 +318,7 @@ void Tank::MoveBarrelTo(POINT pos)
 	}
 }
 
-void Tank::SetShape(POINT pos)
+void Tank::SetShape(FPOINT pos)
 {
 	this->pos = pos;
 	shape.left = pos.x - width / 2;
@@ -302,6 +331,6 @@ void Tank::HitByBullet(int damage)
 {
 	currentHp -= damage;
 	if (currentHp <= 0) {
-		isAlive = false;
+		Die();
 	}
 }

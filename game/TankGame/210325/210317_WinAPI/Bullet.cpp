@@ -3,6 +3,7 @@
 
 HRESULT Bullet::Init()
 {
+	bulletType = BULLET::DEFAULT_BULLET;
 	pos.x = 100;
 	pos.y = 100;
 	width = 20;

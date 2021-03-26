@@ -1,22 +1,25 @@
 #pragma once
 #include "config.h"
-#include "Tank.h"
+#include "GameNode.h"
+#include <list>
 
 class RGBColor; // has a 관계
+class Tank;
 class GameProc: public GameNode
 {
 private:
 	HDC hdc;			// handle - DC (Device Context)
 	PAINTSTRUCT ps;
 	HANDLE hTimer;	// 타이머 객체를 지정하는 핸들
-	HANDLE enemyTimer;
-	POINT ptMouse{ 0, 0 };
+	HANDLE* enemyTimer;
+	HANDLE enemyCreateTimer;
+	FPOINT ptMouse;
 	char szText[128] = "";
 	RGBColor* bgColor;
+	int maxEnemyCnt;
 
-	Tank tank1;
-	Tank tank2;
-	Tank enemy1;
+	Tank* myTank;
+	list<Tank*> enemies;
 
 public:
 	HRESULT Init();

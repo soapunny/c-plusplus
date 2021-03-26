@@ -34,6 +34,12 @@
     <Filter Include="헤더 파일\dto">
       <UniqueIdentifier>{f123a021-c98c-4331-ba98-a05832cb1721}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\dto\abstract_class">
+      <UniqueIdentifier>{8f30d753-64cd-4855-9d3a-53b4524c4aa3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\dto\abstract_class">
+      <UniqueIdentifier>{515e353b-856c-4155-abe9-0c26c72e5023}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RGBColor.cpp">
@@ -41,9 +47,6 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일\main</Filter>
-    </ClCompile>
-    <ClCompile Include="GameNode.cpp">
-      <Filter>소스 파일\dto</Filter>
     </ClCompile>
     <ClCompile Include="GameProc.cpp">
       <Filter>소스 파일\ui</Filter>
@@ -53,6 +56,15 @@
     </ClCompile>
     <ClCompile Include="Bullet.cpp">
       <Filter>소스 파일\dto</Filter>
+    </ClCompile>
+    <ClCompile Include="Dynamite.cpp">
+      <Filter>소스 파일\dto</Filter>
+    </ClCompile>
+    <ClCompile Include="GameNode.cpp">
+      <Filter>소스 파일\dto\abstract_class</Filter>
+    </ClCompile>
+    <ClCompile Include="MovingNode.cpp">
+      <Filter>소스 파일\dto\abstract_class</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,11 +80,17 @@
     <ClInclude Include="Tank.h">
       <Filter>헤더 파일\dto</Filter>
     </ClInclude>
-    <ClInclude Include="GameNode.h">
-      <Filter>헤더 파일\dto</Filter>
-    </ClInclude>
     <ClInclude Include="Bullet.h">
       <Filter>헤더 파일\dto</Filter>
+    </ClInclude>
+    <ClInclude Include="Dynamite.h">
+      <Filter>헤더 파일\dto</Filter>
+    </ClInclude>
+    <ClInclude Include="GameNode.h">
+      <Filter>헤더 파일\dto\abstract_class</Filter>
+    </ClInclude>
+    <ClInclude Include="MovingNode.h">
+      <Filter>헤더 파일\dto\abstract_class</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 class GameNode
 {
 protected:
-	POINT pos;
+	FPOINT pos;
 	int width;
 	int height;
 
@@ -16,8 +16,8 @@ public:
 	virtual void Update()=0;
 	virtual void Release()=0;
 
-	inline void SetPos(POINT pos) { this->pos = pos; }
-	inline POINT GetPos() { return pos; }
+	inline void SetPos(FPOINT pos) { this->pos = pos; }
+	inline FPOINT GetPos() { return pos; }
 	inline int GetWidth() { return width; }
 	inline int GetHeight() { return height; }
 };

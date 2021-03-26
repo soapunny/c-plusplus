@@ -94,7 +94,7 @@ int APIENTRY WinMain(HINSTANCE _hInstance, HINSTANCE _hPrevInstance,
 		DispatchMessage(&message);
 	}
 
-
+	
 	return message.wParam;
 }
 
