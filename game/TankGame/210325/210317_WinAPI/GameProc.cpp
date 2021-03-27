@@ -1,8 +1,9 @@
+#include <ctime>
 #include "GameProc.h"
 #include "Tank.h"
 #include "RGBColor.h"
 
-#define H_TIMER 0
+#define UPDATE 0
 #define ENEMY1 1
 #define ENEMY2 2
 #define ENEMY3 3
@@ -17,32 +18,40 @@
 
 HRESULT GameProc::Init()
 {
-	maxEnemyCnt = 10;
-	enemyTimer = new HANDLE[maxEnemyCnt];
-	hTimer = (HANDLE)SetTimer(g_hWnd, H_TIMER, 50, NULL);
-	enemyCreateTimer = (HANDLE)SetTimer(g_hWnd, ENEMY_CREATE, 10000, NULL);
-	for (int i = 0; i < maxEnemyCnt; i++) {
+	try{
+		updateTimer = (HANDLE)SetTimer(g_hWnd, UPDATE, 50, NULL);
+		enemyCreateTimer = (HANDLE)SetTimer(g_hWnd, ENEMY_CREATE, 10000, NULL);
+		maxEnemyCnt = 10;
+		enemyTimer = new HANDLE[maxEnemyCnt];
+		for (int i = 0; i < maxEnemyCnt; i++) {
 			/*enemyTimer[i] = new HANDLE;*/
-			enemyTimer[i] = (HANDLE)SetTimer(g_hWnd, i+1, 2000 - 100*i ,NULL);
+			enemyTimer[i] = (HANDLE)SetTimer(g_hWnd, ENEMY1 + i, 2000 - 150 * i, NULL);
+		}
+		color = new RGBColor();
+		color->SetR(135);
+		color->SetG(206);
+		color->SetB(235);
+		ptMouse.x = 0;
+		ptMouse.y = 0;
+
+		stage = 1;
+		isBoss = false;
+		hasCleared = false;
+		myTank = new Tank("player");
+		myTank->Init();
+		myTank->SetPos({ WND_WIDTH / 2.0f, WND_HEIGHT*4 / 5.0f });
+		myTank->SetShape(myTank->GetPos());
+		myTank->SetBarrelAngle(PI / 2);
+		Tank* enemy = new Tank();
+		enemy->Init();
+		enemy->SetTankLevel(TANK_LEVEL::WEAKEST_LEVEL);
+		enemies.push_back(enemy);
 	}
-
-	ptMouse.x = 0;
-	ptMouse.y = 0;
-	bgColor = new RGBColor();
-	bgColor->SetR(135);
-	bgColor->SetG(206);
-	bgColor->SetB(235);
-	myTank = new Tank("player");
-	myTank->Init();
-	myTank->SetPos({ WND_WIDTH / 2.0f, WND_HEIGHT / 2.0f });
-	myTank->SetShape(myTank->GetPos());
-	myTank->SetBarrelAngle(PI / 2);
-	/*Tank* enemy = new Tank();
-	enemy->Init();
-	enemies.push_back(enemy);*/
+	catch (exception e) {
+		//e.what();
+		return E_FAIL;
+	}
 	
-
-	//return E_FAIL;
 	return S_OK;
 }
 
@@ -57,9 +66,9 @@ void GameProc::Render(HDC hdc)
 	//TextOut(hdc, 200, 20, szText, strlen(szText));
 
 	//배경 출력
-	bgColor->StartBrush(hdc);
+	color->StartBrush(hdc);
 	Rectangle(hdc, 0, 0, WND_WIDTH, WND_HEIGHT);
-	bgColor->EndBrush(hdc);
+	color->EndBrush(hdc);
 
 	if(myTank->GetAlive())
 		myTank->RenderRandom(hdc);
@@ -74,18 +83,21 @@ void GameProc::Render(HDC hdc)
 void GameProc::Update()
 {
 	myTank->Update();
-	for (list<Tank*>::iterator iter = enemies.begin(); iter != enemies.end();) {
-		(*iter)->Update();
-		//(*iter)->Move();
-		(*iter)->MoveBarrelTo(myTank->GetPos());
-		(*iter)->RemoveBullet(myTank);
-		myTank->RemoveBullet((*iter));
-		if (!(*iter)->GetAlive()) {
-			(*iter)->Release();
-			iter = enemies.erase(iter);
-		}
-		else {
-			iter++;
+	if (enemies.size() <= 0) {
+		myTank->TraceBullets(nullptr);
+	}else{
+		for (list<Tank*>::iterator iter = enemies.begin(); iter != enemies.end();) {
+			(*iter)->Update();
+			(*iter)->MoveBarrelTo(myTank->GetPos());
+			(*iter)->TraceBullets(myTank);
+			myTank->TraceBullets((*iter));
+			if (!(*iter)->GetAlive()) {
+				(*iter)->Release();
+				iter = enemies.erase(iter);
+			}
+			else {
+				iter++;
+			}
 		}
 	}
 }
@@ -98,14 +110,14 @@ void GameProc::Release()
 		iter = enemies.erase(iter);
 	}
 
-	if (bgColor != nullptr)
-		delete bgColor;
-	bgColor = nullptr;
+	if (color != nullptr)
+		delete color;
+	color = nullptr;
 
 	KillTimer(g_hWnd, 0);
 	for(int i =0;i<maxEnemyCnt;i++){
 		if(enemyTimer[i] != nullptr){
-			KillTimer(g_hWnd, i+1);
+			KillTimer(g_hWnd, (UINT_PTR)ENEMY1+i);
 			delete enemyTimer[i];
 		}
 	}
@@ -120,7 +132,6 @@ LRESULT GameProc::MainProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 	switch (iMessage)
 	{
 	case WM_CREATE:
-		Init();
 		break;
 	case WM_TIMER:
 		RunTimer(wParam);
@@ -171,237 +182,219 @@ void GameProc::KeyDown(WPARAM wParam)
 		myTank->Move(MOVE::MOVE_RIGHT);
 		break;
 	case '1':
-		myTank->SetBulletType(BULLET::DEFAULT_BULLET);
+		myTank->SetBulletType(BULLET::DEFAULT_BULLET, BULLET::DEFAULT_BULLET);
 		break;
 	case '2':
-		myTank->SetBulletType(BULLET::DYNAMITE_BULLET);
+		myTank->SetBulletType(BULLET::BOMB_BULLET, BULLET::BOMB_BULLET);
 		break;
 	}
 	InvalidateRect(g_hWnd, NULL, true);
 }
 
+void GameProc::MoveEnemyByTimer(int timerId) {
+	if (enemies.size() > 0) {
+		list<Tank*>::iterator iter = enemies.begin();
+		for (int i = 0; i < timerId - 1; i++) {
+			iter++;
+			if (iter == enemies.end())
+				return;
+		}
+		if ((*iter)->GetAlive()) {
+			(*iter)->Move();
+			(*iter)->Fire();
+		}
+		/*else {
+			if (enemyTimer[1] != nullptr) {
+				KillTimer(g_hWnd, ENEMY2);
+				delete enemyTimer[1];
+				enemyTimer[1] = nullptr;
+			}
+		}*/
+	}
+}
+
 void GameProc::RunTimer(WPARAM wParam)
 {
 	switch (wParam) {
-	case H_TIMER:
+	case UPDATE:
 		Update();
 		InvalidateRect(g_hWnd, NULL, true);
 		break;
 	case ENEMY1:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[0] != nullptr) {
-					KillTimer(g_hWnd, ENEMY1);
-					delete enemyTimer[0];
-					enemyTimer[0] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY1);
 		break;
 	case ENEMY2:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY2 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[1] != nullptr) {
-					KillTimer(g_hWnd, ENEMY2);
-					delete enemyTimer[1];
-					enemyTimer[1] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY2);
 		break;
 	case ENEMY3:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY3 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[2] != nullptr) {
-					KillTimer(g_hWnd, ENEMY3);
-					delete enemyTimer[2];
-					enemyTimer[2] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY3);
 		break;
 	case ENEMY4:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY4 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[3] != nullptr) {
-					KillTimer(g_hWnd, ENEMY4);
-					delete enemyTimer[3];
-					enemyTimer[3] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY4);
 		break;
 	case ENEMY5:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY5 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[4] != nullptr) {
-					KillTimer(g_hWnd, ENEMY5);
-					delete enemyTimer[4];
-					enemyTimer[4] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY5);
 		break;
 	case ENEMY6:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY6 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[5] != nullptr) {
-					KillTimer(g_hWnd, ENEMY6);
-					delete enemyTimer[5];
-					enemyTimer[5] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY6);
 		break;
 	case ENEMY7:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY7 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[6] != nullptr) {
-					KillTimer(g_hWnd, ENEMY7);
-					delete enemyTimer[6];
-					enemyTimer[6] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY7);
 		break;
 	case ENEMY8:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY8 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[7] != nullptr) {
-					KillTimer(g_hWnd, ENEMY8);
-					delete enemyTimer[7];
-					enemyTimer[7] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY8);
 		break;
 	case ENEMY9:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY9 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else {
-				if (enemyTimer[8] != nullptr) {
-					KillTimer(g_hWnd, ENEMY9);
-					delete enemyTimer[8];
-					enemyTimer[8] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY9);
 		break;
 	case ENEMY10:
-		if (enemies.size() > 0) {
-			list<Tank*>::iterator iter = enemies.begin();
-			for (int i = 0; i < ENEMY10 - 1; i++) {
-				iter++;
-				if (iter == enemies.end())
-					return;
-			}
-			if ((*iter)->GetAlive()) {
-				(*iter)->Move();
-				(*iter)->Fire();
-			}
-			/*else{
-				if(enemyTimer[9] != nullptr){
-					KillTimer(g_hWnd, ENEMY10);
-					delete enemyTimer[9];
-					enemyTimer[9] = nullptr;
-				}
-			}*/
-		}
+		MoveEnemyByTimer(ENEMY10);
 		break;
 	case ENEMY_CREATE:
-		if(enemies.size() < maxEnemyCnt){
-			Tank* enemy = new Tank();
-			enemy->Init();
-			//enemy->SetShape(FPOINT{ WND_WIDTH / 2, WND_HEIGHT / 5 });
-			if (myTank->GetNameNum() % 4 == 3)
-				enemy->SetBulletType(BULLET::DYNAMITE_BULLET);
-			enemies.push_back(enemy);
-
-		}
+		CreateEnemy();
 		break;
+	}
+}
+
+void GameProc::CreateEnemy()
+{
+	if (enemies.size() < maxEnemyCnt) {
+		srand(time(NULL)); 
+		Tank* enemy = nullptr;
+		//enemy->SetShape(FPOINT{ WND_WIDTH / 2, WND_HEIGHT / 5 });
+		if (stage == 1) {
+			if (myTank->GetKillCnt() <= 3) {
+				enemy = new Tank();
+				enemy->Init();
+				if (rand() % 4 == 3)
+					enemy->SetTankLevel(TANK_LEVEL::WEAK_LEVEL);
+				else
+					enemy->SetTankLevel(TANK_LEVEL::WEAKEST_LEVEL);
+				enemies.push_back(enemy);
+			}
+			else if (!isBoss) {
+				//TODO 보스 세팅
+				enemy = new Tank();
+				enemy->Init();
+				enemy->SetTankLevel(TANK_LEVEL::NORMAL_LEVEL);
+				enemies.push_back(enemy);
+				isBoss = true;
+				hasCleared = true;
+			}
+			else if (hasCleared) {
+				myTank->SetKillCnt(0);
+				isBoss = false;
+				hasCleared = false;
+				stage++;
+			}
+		}
+		else if (stage == 2) {
+			if (myTank->GetKillCnt() <= 3) {
+				enemy = new Tank();
+				enemy->Init();
+				if (rand() % 4 == 3)
+					enemy->SetTankLevel(TANK_LEVEL::NORMAL_LEVEL);
+				else
+					enemy->SetTankLevel(TANK_LEVEL::WEAK_LEVEL);
+				enemies.push_back(enemy);
+			}
+			else if (!isBoss) {
+				//TODO 보스 세팅
+				enemy = new Tank();
+				enemy->Init();
+				enemy->SetTankLevel(TANK_LEVEL::STRONG_LEVEL);
+				enemies.push_back(enemy);
+				isBoss = true;
+				hasCleared = true;
+			}
+			else if (hasCleared) {
+				myTank->SetKillCnt(0);
+				isBoss = false;
+				hasCleared = false;
+				stage++;
+			}
+		}
+		else if (stage == 3) {
+			if (myTank->GetKillCnt() <= 3) {
+				enemy = new Tank();
+				enemy->Init();
+				if (rand() % 4 == 3)
+					enemy->SetTankLevel(TANK_LEVEL::STRONG_LEVEL);
+				else
+					enemy->SetTankLevel(TANK_LEVEL::NORMAL_LEVEL);
+				enemies.push_back(enemy);
+			}
+			else if (!isBoss) {
+				//TODO 보스 세팅
+				enemy = new Tank();
+				enemy->Init();
+				enemy->SetTankLevel(TANK_LEVEL::AWFUL_LEVEL);
+				enemies.push_back(enemy);
+				isBoss = true;
+				hasCleared = true;
+			}
+			else if (hasCleared) {
+				myTank->SetKillCnt(0);
+				isBoss = false;
+				hasCleared = false;
+				stage++;
+			}
+		}
+		else if (stage == 4) {
+			if (myTank->GetKillCnt() <= 3) {
+				enemy = new Tank();
+				enemy->Init();
+				if (rand() % 4 == 3)
+					enemy->SetTankLevel(TANK_LEVEL::AWFUL_LEVEL);
+				else
+					enemy->SetTankLevel(TANK_LEVEL::STRONG_LEVEL);
+				enemies.push_back(enemy);
+			}
+			else if (!isBoss) {
+				//TODO 보스 세팅
+				enemy = new Tank();
+				enemy->Init();
+				enemy->SetTankLevel(TANK_LEVEL::HIGHST_LEVEL);
+				enemies.push_back(enemy);
+				isBoss = true;
+				hasCleared = true;
+			}
+			else if (hasCleared) {
+				myTank->SetKillCnt(0);
+				isBoss = false;
+				hasCleared = false;
+				stage++;
+			}
+		}
+		else if (stage == 5) {
+			if (myTank->GetKillCnt() <= 3) {
+				enemy = new Tank();
+				enemy->Init();
+				if (rand() % 4 == 3)
+					enemy->SetTankLevel(TANK_LEVEL::HIGHST_LEVEL);
+				else
+					enemy->SetTankLevel(TANK_LEVEL::AWFUL_LEVEL);
+				enemies.push_back(enemy);
+			}
+			else if (!isBoss) {
+				//TODO 보스 세팅
+				enemy = new Tank();
+				enemy->Init();
+				enemy->SetTankLevel(TANK_LEVEL::HIGHST_LEVEL);
+				enemies.push_back(enemy);
+				enemy = new Tank();
+				enemy->Init();
+				enemy->SetTankLevel(TANK_LEVEL::HIGHST_LEVEL);
+				enemies.push_back(enemy);
+				isBoss = true;
+				hasCleared = true;
+			}
+			else if (hasCleared) {
+				myTank->SetKillCnt(0);
+				isBoss = false;
+				hasCleared = false;
+				stage++;
+			}
+		}
 	}
 }

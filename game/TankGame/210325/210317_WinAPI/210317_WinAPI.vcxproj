@@ -141,23 +141,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bullet.cpp" />
-    <ClCompile Include="Dynamite.cpp" />
-    <ClCompile Include="GameNode.cpp" />
+    <ClCompile Include="BombBullet.cpp" />
     <ClCompile Include="GameProc.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MovingNode.cpp" />
     <ClCompile Include="RGBColor.cpp" />
     <ClCompile Include="Tank.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bullet.h" />
+    <ClInclude Include="BulletNode.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="Dynamite.h" />
+    <ClInclude Include="BombBullet.h" />
     <ClInclude Include="GameNode.h" />
     <ClInclude Include="GameProc.h" />
     <ClInclude Include="MovingNode.h" />
     <ClInclude Include="RGBColor.h" />
     <ClInclude Include="Tank.h" />
+    <ClInclude Include="TankNode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

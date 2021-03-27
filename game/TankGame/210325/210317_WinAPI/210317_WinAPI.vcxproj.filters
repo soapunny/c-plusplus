@@ -37,8 +37,8 @@
     <Filter Include="헤더 파일\dto\abstract_class">
       <UniqueIdentifier>{8f30d753-64cd-4855-9d3a-53b4524c4aa3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\dto\abstract_class">
-      <UniqueIdentifier>{515e353b-856c-4155-abe9-0c26c72e5023}</UniqueIdentifier>
+    <Filter Include="헤더 파일\dto\abstract_class\common_abstract_class">
+      <UniqueIdentifier>{468af985-2c3b-475b-8c41-28ffc625b708}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -57,14 +57,8 @@
     <ClCompile Include="Bullet.cpp">
       <Filter>소스 파일\dto</Filter>
     </ClCompile>
-    <ClCompile Include="Dynamite.cpp">
+    <ClCompile Include="BombBullet.cpp">
       <Filter>소스 파일\dto</Filter>
-    </ClCompile>
-    <ClCompile Include="GameNode.cpp">
-      <Filter>소스 파일\dto\abstract_class</Filter>
-    </ClCompile>
-    <ClCompile Include="MovingNode.cpp">
-      <Filter>소스 파일\dto\abstract_class</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -83,14 +77,20 @@
     <ClInclude Include="Bullet.h">
       <Filter>헤더 파일\dto</Filter>
     </ClInclude>
-    <ClInclude Include="Dynamite.h">
-      <Filter>헤더 파일\dto</Filter>
-    </ClInclude>
-    <ClInclude Include="GameNode.h">
-      <Filter>헤더 파일\dto\abstract_class</Filter>
-    </ClInclude>
     <ClInclude Include="MovingNode.h">
       <Filter>헤더 파일\dto\abstract_class</Filter>
+    </ClInclude>
+    <ClInclude Include="BombBullet.h">
+      <Filter>헤더 파일\dto</Filter>
+    </ClInclude>
+    <ClInclude Include="TankNode.h">
+      <Filter>헤더 파일\dto\abstract_class</Filter>
+    </ClInclude>
+    <ClInclude Include="BulletNode.h">
+      <Filter>헤더 파일\dto\abstract_class</Filter>
+    </ClInclude>
+    <ClInclude Include="GameNode.h">
+      <Filter>헤더 파일\dto\abstract_class\common_abstract_class</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

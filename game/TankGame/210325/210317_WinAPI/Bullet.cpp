@@ -27,7 +27,7 @@ void Bullet::Render(HDC hdc)
 
 void Bullet::Update()
 {
-
+	Move();
 }
 
 void Bullet::Release()
