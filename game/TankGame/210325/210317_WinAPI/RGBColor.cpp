@@ -46,6 +46,12 @@ void RGBColor::StartPen(HDC hdc)
 	hOldPen = (HPEN)SelectObject(hdc, hPen);
 }
 
+void RGBColor::StartPen(HDC hdc, int r, int g, int b)
+{
+	hPen = CreatePen(PS_SOLID, 3, RGB(r, g, b));
+	hOldPen = (HPEN)SelectObject(hdc, hPen);
+}
+
 void RGBColor::EndPen(HDC hdc)
 {
 	SelectObject(hdc, hOldPen);

@@ -17,7 +17,7 @@ public:
 	void Release();
 
 	void Move();
-	void TraceBullet(TankNode* tank);
+	void TraceBullet(TankNode* myTank, TankNode* tank);
 	bool HasNoBullet() { return hasExploded && bullets.size() == 0;}
 };
 

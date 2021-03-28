@@ -25,6 +25,7 @@ public:
 	void StartBrush(HDC hdc);
 	void EndBrush(HDC hdc);
 	void StartPen(HDC hdc);
+	void StartPen(HDC hdc, int r, int g, int b);
 	void EndPen(HDC hdc);
 };
 

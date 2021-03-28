@@ -60,6 +60,9 @@
     <ClCompile Include="BombBullet.cpp">
       <Filter>소스 파일\dto</Filter>
     </ClCompile>
+    <ClCompile Include="GuidedBullet.cpp">
+      <Filter>소스 파일\dto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h">
@@ -91,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="GameNode.h">
       <Filter>헤더 파일\dto\abstract_class\common_abstract_class</Filter>
+    </ClInclude>
+    <ClInclude Include="GuidedBullet.h">
+      <Filter>헤더 파일\dto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

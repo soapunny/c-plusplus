@@ -1,6 +1,7 @@
 #include "Tank.h"
 #include "RGBColor.h"
 #include "BombBullet.h"
+#include "GuidedBullet.h"
 #include <ctime>
 
 int Tank::NAME_NUM;
@@ -17,7 +18,7 @@ HRESULT Tank::Init()
 			name = "Tank"+to_string(++NAME_NUM);
 		movePattern = rand()%4;
 		pos.x = rand()%WND_WIDTH;
-		pos.y = WND_HEIGHT/4;
+		pos.y = -WND_HEIGHT/9;
 		shape.left = pos.x - width/2;
 		shape.top = pos.y - height/2;
 		shape.right = pos.x + width / 2;
@@ -181,7 +182,7 @@ void Tank::Fire()
 	if (bullets.size() >= maxBullet) {
 		return;
 	}
-	else if (bullets.size() > 0) {
+	else if (bullets.size() > 0) {//리스트에 아직 BombBullet이 남아있으면 더 이상 발사하지 못한다.
 		for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end();iter++) {
 			if ((*iter)->GetBulletType() == BULLET::BOMB_BULLET)
 				return;
@@ -191,14 +192,18 @@ void Tank::Fire()
 	if(fireCnt%2 == 0){
 		if (bulletType1 == BULLET::DEFAULT_BULLET)
 			bullet = new Bullet();
-		else if(bulletType1 == BULLET::BOMB_BULLET)
+		else if (bulletType1 == BULLET::BOMB_BULLET)
 			bullet = new BombBullet();
+		else
+			bullet = new Bullet();
 	}
 	else {
 		if (bulletType2 == BULLET::DEFAULT_BULLET)
 			bullet = new Bullet();
 		else if (bulletType2 == BULLET::BOMB_BULLET)
 			bullet = new BombBullet();
+		else
+			bullet = new Bullet();
 	}
 	(*bullet).Init();
 	(*bullet).SetFlyingAngle(barrelAngle);
@@ -207,11 +212,42 @@ void Tank::Fire()
 	fireCnt++;
 }
 
+void Tank::FireGuidedBullet(float targetAngle, FPOINT targetPos)
+{
+	if (bullets.size() >= maxBullet) {
+		return;
+	}
+	else if (bullets.size() > 0) {
+		for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end(); iter++) {
+			if ((*iter)->GetBulletType() == BULLET::BOMB_BULLET)
+				return;
+		}
+	}
+	GuidedBullet* bullet = nullptr; 
+	if (fireCnt % 2 == 0) {
+		if (bulletType1 == BULLET::GUIDED_BULLET){
+			bullet = new GuidedBullet();
+		}
+	}
+	else {
+		if (bulletType2 == BULLET::GUIDED_BULLET) {
+			bullet = new GuidedBullet();
+		}
+	}
+	bullet->Init();
+	bullet->SetFlyingAngle(barrelAngle);
+	bullet->SetTargetAngle(targetAngle);
+	bullet->SetTargetPos(targetPos);
+	bullet->SetPos({ (pos.x + cosf(barrelAngle) * (barrelSize + 10)) , (pos.y - sinf(barrelAngle) * barrelSize) });
+	bullets.push_back(bullet);
+	fireCnt++;
+}
+
 void Tank::TraceBullets(TankNode* tank)
 {
 	for (list<Bullet*>::iterator iter = bullets.begin(); iter != bullets.end();) {
 		if ((*iter)->GetBulletType() == BULLET::BOMB_BULLET) {
-			((BombBullet*)(*iter))->TraceBullet(tank);
+			((BombBullet*)(*iter))->TraceBullet(this, tank);
 			if (((BombBullet*)(*iter))->HasNoBullet()) {
 				((BombBullet*)(*iter))->Release();
 				iter = bullets.erase(iter);
@@ -270,36 +306,40 @@ void Tank::Move(MOVE move)
 
 void Tank::Move()
 {
-	srand(time(NULL));
-	movePattern = rand()%4;
-	switch (movePattern) {
-	case 0:
-		pos.x += speed;
-		if (pos.x >= WND_WIDTH) {
-			pos.x -= speed;
-			movePattern = 1;
-		}
-		break;
-	case 1:
-		pos.x -= speed;
-		if (pos.x <= 0) {
-			pos.x += speed;
-			movePattern = 2;
-		}
-		break;
-	case 2:
+	if (pos.y <= 100) {
 		pos.y += speed;
-		if (pos.y >= WND_HEIGHT) {
-			pos.y -= speed;
-			movePattern = 3;
-		}
-		break;
-	case 3:
-		pos.y -= speed;
-		if (pos.y <= 0) {
+	}else{
+		srand(time(NULL));
+		movePattern = rand()%4;
+		switch (movePattern) {
+		case 0:
+			pos.x += speed;
+			if (pos.x >= WND_WIDTH) {
+				pos.x -= speed;
+				movePattern = 1;
+			}
+			break;
+		case 1:
+			pos.x -= speed;
+			if (pos.x <= 0) {
+				pos.x += speed;
+				movePattern = 2;
+			}
+			break;
+		case 2:
 			pos.y += speed;
+			if (pos.y >= WND_HEIGHT) {
+				pos.y -= speed;
+				movePattern = 3;
+			}
+			break;
+		case 3:
+			pos.y -= speed;
+			if (pos.y <= 0) {
+				pos.y += speed;
+			}
+			break;
 		}
-		break;
 	}
 	shape.left = pos.x - width / 2;
 	shape.top = pos.y - height / 2;
@@ -340,37 +380,37 @@ void Tank::SetTankLevel(TANK_LEVEL level)
 	switch (level) {
 	case TANK_LEVEL::WEAKEST_LEVEL:
 		color->ChangeColor(255, 255, 255);
-		speed = 5;
+		speed = 10;
 		SetHp(5);
 		SetBulletType(BULLET::DEFAULT_BULLET, BULLET::DEFAULT_BULLET);
 		break;
 	case TANK_LEVEL::WEAK_LEVEL:
 		color->ChangeColor(255, 212, 0);
-		speed = 10;
+		speed = 20;
 		SetHp(5);
 		SetBulletType(BULLET::DEFAULT_BULLET, BULLET::DEFAULT_BULLET);
 		break;
 	case TANK_LEVEL::NORMAL_LEVEL:
 		color->ChangeColor(129, 193, 71);
-		speed = 15;
+		speed = 30;
 		SetHp(10);
 		SetBulletType(BULLET::BOMB_BULLET, BULLET::DEFAULT_BULLET);
 		break;
 	case TANK_LEVEL::STRONG_LEVEL:
 		color->ChangeColor(80, 188, 223);
-		speed = 20;
+		speed = 40;
 		SetHp(10);
 		SetBulletType(BULLET::BOMB_BULLET, BULLET::DEFAULT_BULLET);
 		break;
 	case TANK_LEVEL::AWFUL_LEVEL:
 		color->ChangeColor(255, 0, 0);
-		speed = 25;
+		speed = 80;
 		SetHp(15);
 		SetBulletType(BULLET::BOMB_BULLET, BULLET::BOMB_BULLET);
 		break;
 	case TANK_LEVEL::HIGHST_LEVEL:
-		color->ChangeColor(255, 255, 255);
-		speed = 30;
+		color->ChangeColor(0, 0, 0);
+		speed = 100;
 		SetHp(20);
 		SetBulletType(BULLET::BOMB_BULLET, BULLET::BOMB_BULLET);
 		break;

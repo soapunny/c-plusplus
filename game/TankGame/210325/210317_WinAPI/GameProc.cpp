@@ -42,6 +42,7 @@ HRESULT GameProc::Init()
 		myTank->SetPos({ WND_WIDTH / 2.0f, WND_HEIGHT*4 / 5.0f });
 		myTank->SetShape(myTank->GetPos());
 		myTank->SetBarrelAngle(PI / 2);
+		//TODO ³» ÅÊÅ© ÃÑ¾Ë »ö»ó¸¸ ´Ù¸£°Ô
 		Tank* enemy = new Tank();
 		enemy->Init();
 		enemy->SetTankLevel(TANK_LEVEL::WEAKEST_LEVEL);
@@ -59,12 +60,6 @@ void GameProc::Render(HDC hdc)
 {
 	hdc = BeginPaint(g_hWnd, &ps);
 
-	// ÀÎ»ç
-	//TextOut(hdc, 20, 20, "´Ù¶÷Áã Çå ÃÂ¹ÙÄû¿¡ Å¸°íÆÄ", strlen("´Ù¶÷Áã Çå ÃÂ¹ÙÄû¿¡ Å¸°íÆÄ"));
-	// ¸¶¿ì½º ÁÂÇ¥
-	//wsprintf(szText, "X : %d, Y : %d", ptMouse.x, ptMouse.y);
-	//TextOut(hdc, 200, 20, szText, strlen(szText));
-
 	//¹è°æ Ãâ·Â
 	color->StartBrush(hdc);
 	Rectangle(hdc, 0, 0, WND_WIDTH, WND_HEIGHT);
@@ -77,6 +72,16 @@ void GameProc::Render(HDC hdc)
 			(*iter)->Render(hdc);
 	}
 
+	//Å³ Ä«¿îÆ®
+	wsprintf(szText, "Stage %d", stage);
+	TextOut(hdc, 20, 20, szText, strlen(szText));
+	wsprintf(szText, "[Kill Count : %d]", myTank->GetKillCnt());
+	TextOut(hdc, 20, 40, szText, strlen(szText));
+	if (isBoss) {
+		SetTextColor(hdc, RGB(255, 0, 0));
+		TextOut(hdc, 20, 60, "BOSS", strlen("BOSS"));
+		SetTextColor(hdc, RGB(0, 0, 0));
+	}
 	EndPaint(g_hWnd, &ps);
 }
 
@@ -140,7 +145,12 @@ LRESULT GameProc::MainProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 		KeyDown(wParam);
 		break;
 	case WM_LBUTTONDOWN:
-		myTank->Fire();
+		if (myTank->GetBulletType1() == BULLET::GUIDED_BULLET && enemies.size() > 0) {
+			myTank->FireGuidedBullet((*enemies.begin())->GetBarrelAngle() < PI ? (*enemies.begin())->GetBarrelAngle() + PI : (*enemies.begin())->GetBarrelAngle() - PI
+				, (*enemies.begin())->GetPos());
+		}else{
+			myTank->Fire();
+		}
 		break;
 	case WM_MOUSEMOVE:
 		ptMouse.x = LOWORD(lParam);
@@ -186,6 +196,9 @@ void GameProc::KeyDown(WPARAM wParam)
 		break;
 	case '2':
 		myTank->SetBulletType(BULLET::BOMB_BULLET, BULLET::BOMB_BULLET);
+		break;
+	case '3':
+		myTank->SetBulletType(BULLET::GUIDED_BULLET, BULLET::GUIDED_BULLET);
 		break;
 	}
 	InvalidateRect(g_hWnd, NULL, true);
@@ -263,7 +276,8 @@ void GameProc::CreateEnemy()
 		Tank* enemy = nullptr;
 		//enemy->SetShape(FPOINT{ WND_WIDTH / 2, WND_HEIGHT / 5 });
 		if (stage == 1) {
-			if (myTank->GetKillCnt() <= 3) {
+			if (myTank->GetKillCnt() < 3) {
+				if (myTank->GetKillCnt() + enemies.size() >= 3) return;
 				enemy = new Tank();
 				enemy->Init();
 				if (rand() % 4 == 3)
@@ -282,6 +296,7 @@ void GameProc::CreateEnemy()
 				hasCleared = true;
 			}
 			else if (hasCleared) {
+				if (enemies.size() > 0) return;
 				myTank->SetKillCnt(0);
 				isBoss = false;
 				hasCleared = false;
@@ -289,7 +304,8 @@ void GameProc::CreateEnemy()
 			}
 		}
 		else if (stage == 2) {
-			if (myTank->GetKillCnt() <= 3) {
+			if (myTank->GetKillCnt() < 3) {
+				if (myTank->GetKillCnt() + enemies.size() >= 3) return;
 				enemy = new Tank();
 				enemy->Init();
 				if (rand() % 4 == 3)
@@ -308,6 +324,7 @@ void GameProc::CreateEnemy()
 				hasCleared = true;
 			}
 			else if (hasCleared) {
+				if (enemies.size() > 0) return;
 				myTank->SetKillCnt(0);
 				isBoss = false;
 				hasCleared = false;
@@ -315,7 +332,8 @@ void GameProc::CreateEnemy()
 			}
 		}
 		else if (stage == 3) {
-			if (myTank->GetKillCnt() <= 3) {
+			if (myTank->GetKillCnt() < 3) {
+				if (myTank->GetKillCnt() + enemies.size() >= 3) return;
 				enemy = new Tank();
 				enemy->Init();
 				if (rand() % 4 == 3)
@@ -334,6 +352,7 @@ void GameProc::CreateEnemy()
 				hasCleared = true;
 			}
 			else if (hasCleared) {
+				if (enemies.size() > 0) return;
 				myTank->SetKillCnt(0);
 				isBoss = false;
 				hasCleared = false;
@@ -341,7 +360,8 @@ void GameProc::CreateEnemy()
 			}
 		}
 		else if (stage == 4) {
-			if (myTank->GetKillCnt() <= 3) {
+			if (myTank->GetKillCnt() < 3) {
+				if (myTank->GetKillCnt() + enemies.size() >= 3) return;
 				enemy = new Tank();
 				enemy->Init();
 				if (rand() % 4 == 3)
@@ -360,6 +380,7 @@ void GameProc::CreateEnemy()
 				hasCleared = true;
 			}
 			else if (hasCleared) {
+				if (enemies.size() > 0) return;
 				myTank->SetKillCnt(0);
 				isBoss = false;
 				hasCleared = false;
@@ -367,7 +388,8 @@ void GameProc::CreateEnemy()
 			}
 		}
 		else if (stage == 5) {
-			if (myTank->GetKillCnt() <= 3) {
+			if (myTank->GetKillCnt() < 3) {
+				if (myTank->GetKillCnt() + enemies.size() >= 3) return;
 				enemy = new Tank();
 				enemy->Init();
 				if (rand() % 4 == 3)
@@ -390,6 +412,7 @@ void GameProc::CreateEnemy()
 				hasCleared = true;
 			}
 			else if (hasCleared) {
+				if (enemies.size() > 0) return;
 				myTank->SetKillCnt(0);
 				isBoss = false;
 				hasCleared = false;

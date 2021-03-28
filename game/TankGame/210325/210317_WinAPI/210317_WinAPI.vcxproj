@@ -143,6 +143,7 @@
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="BombBullet.cpp" />
     <ClCompile Include="GameProc.cpp" />
+    <ClCompile Include="GuidedBullet.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RGBColor.cpp" />
     <ClCompile Include="Tank.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="BombBullet.h" />
     <ClInclude Include="GameNode.h" />
     <ClInclude Include="GameProc.h" />
+    <ClInclude Include="GuidedBullet.h" />
     <ClInclude Include="MovingNode.h" />
     <ClInclude Include="RGBColor.h" />
     <ClInclude Include="Tank.h" />

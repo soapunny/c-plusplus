@@ -26,6 +26,7 @@ public:
 	void Release();
 
 	void Fire();
+	void FireGuidedBullet(float targetAngle, FPOINT targetPos);
 	void TraceBullets(TankNode* tank);
 	void Move(MOVE move);
 	void Move();
@@ -41,6 +42,7 @@ public:
 	inline bool GetAlive() { return isAlive; }
 	inline int GetKillCnt() { return killCnt; }
 	inline int GetNameNum() { return NAME_NUM; }
+	inline BULLET GetBulletType1() { return bulletType1; }
 	void HitByBullet(int damage);
 };
 

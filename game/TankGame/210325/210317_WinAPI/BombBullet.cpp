@@ -79,7 +79,7 @@ void BombBullet::Move()
     }
 }
 
-void BombBullet::TraceBullet(TankNode* tank)
+void BombBullet::TraceBullet(TankNode* myTank, TankNode* tank)
 {
     for (list<Bullet>::iterator iter = bullets.begin(); iter != bullets.end();) {
         if ((iter)->GetPos().x < 0 || (iter)->GetPos().x > WND_WIDTH || (iter)->GetPos().y < 0 || (iter)->GetPos().y > WND_HEIGHT) {
@@ -89,6 +89,8 @@ void BombBullet::TraceBullet(TankNode* tank)
         else if (tank->GetAlive() && (iter)->GetPos().x >= tank->GetPos().x - tank->GetWidth() / 2 && (iter)->GetPos().x <= tank->GetPos().x + tank->GetWidth() / 2
             && (iter)->GetPos().y <= tank->GetPos().y + tank->GetHeight() / 2 && (iter)->GetPos().y >= tank->GetPos().y - tank->GetHeight() / 2) {
             tank->HitByBullet((iter)->GetDamage());
+            if (!tank->GetAlive())
+                myTank->IncreaseKillCnt();
             (iter)->Release();
             iter = bullets.erase(iter);
         }

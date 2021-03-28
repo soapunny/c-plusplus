@@ -35,8 +35,10 @@ protected:
 public:
 	inline virtual void SetTankLevel(TANK_LEVEL level) = 0;
 	inline virtual void Fire() = 0;
+	inline virtual void IncreaseKillCnt() { this->killCnt++; }
 	inline virtual void MoveBarrelTo(FPOINT targetPos) = 0;
 	inline virtual void TraceBullets(TankNode* tank) = 0;
 	inline virtual bool GetAlive() { return isAlive; }
+	inline virtual float GetBarrelAngle() { return barrelAngle; }
 	inline virtual void HitByBullet(int damage) = 0;
 };
