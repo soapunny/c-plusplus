@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{e631e540-4d9f-4e91-a426-f433723bec2f}</ProjectGuid>
-    <RootNamespace>My210317WinAPI</RootNamespace>
+    <RootNamespace>TankGame</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>TankGame</ProjectName>
   </PropertyGroup>

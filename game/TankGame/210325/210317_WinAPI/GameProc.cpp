@@ -146,8 +146,8 @@ LRESULT GameProc::MainProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lPara
 		break;
 	case WM_LBUTTONDOWN:
 		if (myTank->GetBulletType1() == BULLET::GUIDED_BULLET && enemies.size() > 0) {
-			myTank->FireGuidedBullet((*enemies.begin())->GetBarrelAngle() < PI ? (*enemies.begin())->GetBarrelAngle() + PI : (*enemies.begin())->GetBarrelAngle() - PI
-				, (*enemies.begin())->GetPos());
+			//TODO : 가장 가까이 있는 적을 찾는다.
+			myTank->FireGuidedBullet(*enemies.begin());
 		}else{
 			myTank->Fire();
 		}

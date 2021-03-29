@@ -26,7 +26,7 @@ public:
 	void Release();
 
 	void Fire();
-	void FireGuidedBullet(float targetAngle, FPOINT targetPos);
+	void FireGuidedBullet(MovingNode* target);
 	void TraceBullets(TankNode* tank);
 	void Move(MOVE move);
 	void Move();

@@ -212,7 +212,7 @@ void Tank::Fire()
 	fireCnt++;
 }
 
-void Tank::FireGuidedBullet(float targetAngle, FPOINT targetPos)
+void Tank::FireGuidedBullet(MovingNode* target)
 {
 	if (bullets.size() >= maxBullet) {
 		return;
@@ -236,8 +236,7 @@ void Tank::FireGuidedBullet(float targetAngle, FPOINT targetPos)
 	}
 	bullet->Init();
 	bullet->SetFlyingAngle(barrelAngle);
-	bullet->SetTargetAngle(targetAngle);
-	bullet->SetTargetPos(targetPos);
+	bullet->SetTarget(target); // target의 주소값을 저장
 	bullet->SetPos({ (pos.x + cosf(barrelAngle) * (barrelSize + 10)) , (pos.y - sinf(barrelAngle) * barrelSize) });
 	bullets.push_back(bullet);
 	fireCnt++;
